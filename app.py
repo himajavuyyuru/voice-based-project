@@ -1,54 +1,111 @@
 import streamlit as st
+from speech_to_text import speech_to_text
+from semantic_eval import evaluate_concept
+from scoring_engine import calculate_score
+from report_generator import generate_report
 
-from speech_to_text import transcribe_audio
-from semantic_eval import calculate_similarity
-from scoring_engine import (
-    calculate_score,
-    classify_understanding
-)
-from report_generator import generate_pdf
-
-st.title("🎤 Voice Based Concept Understanding Analyser")
-
-reference_text = st.text_area(
-    "Enter Reference Concept"
+st.set_page_config(
+    page_title="Voice Based Concept Understanding Analyzer",
+    page_icon="🎤",
+    layout="centered"
 )
 
+st.title("🎤 Voice Based Concept Understanding Analyzer")
+
+# --------------------------
+# Session State
+# --------------------------
+if "transcript" not in st.session_state:
+    st.session_state.transcript = ""
+
+if "concept_score" not in st.session_state:
+    st.session_state.concept_score = 0
+
+if "feedback" not in st.session_state:
+    st.session_state.feedback = ""
+
+if "analyzed" not in st.session_state:
+    st.session_state.analyzed = False
+
+
+# --------------------------
+# Upload Audio
+# --------------------------
 uploaded_file = st.file_uploader(
-    "Upload Audio",
+    "Upload an Audio File",
     type=["wav", "mp3", "m4a"]
 )
 
-if uploaded_file and reference_text:
+col1, col2 = st.columns(2)
 
-    with open(uploaded_file.name, "wb") as f:
-        f.write(uploaded_file.getbuffer())
+# --------------------------
+# Analyze Button
+# --------------------------
+with col1:
+    if st.button("Analyze Concept"):
 
-    transcript = transcribe_audio(uploaded_file.name)
+        if uploaded_file is None:
+            st.warning("Please upload an audio file.")
+            st.stop()
 
-    similarity = calculate_similarity(
-        reference_text,
-        transcript
-    )
+        try:
+            with st.spinner("Analyzing audio..."):
 
-    score = calculate_score(similarity)
+                transcript = speech_to_text(uploaded_file)
 
-    classification = classify_understanding(score)
+                feedback = evaluate_concept(transcript)
+
+                score = calculate_score(feedback)
+
+                st.session_state.transcript = transcript
+                st.session_state.feedback = feedback
+                st.session_state.concept_score = score
+                st.session_state.analyzed = True
+
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+
+# --------------------------
+# Clear Button
+# --------------------------
+with col2:
+    if st.button("Clear"):
+
+        st.session_state.transcript = ""
+        st.session_state.feedback = ""
+        st.session_state.concept_score = 0
+        st.session_state.analyzed = False
+
+        st.rerun()
+
+
+# --------------------------
+# Display Results
+# --------------------------
+if st.session_state.analyzed:
+
+    st.success("Analysis Completed")
 
     st.subheader("Transcript")
-    st.write(transcript)
+    st.write(st.session_state.transcript)
 
-    st.subheader("Results")
-    st.write(f"Semantic Similarity: {similarity}")
-    st.write(f"Understanding Score: {score}%")
-    st.write(f"Classification: {classification}")
+    st.subheader("Concept Evaluation")
+    st.write(st.session_state.feedback)
 
-    if st.button("Generate PDF Report"):
-        generate_pdf(
-            "report.pdf",
-            transcript,
-            similarity,
-            score,
-            classification
+    st.subheader("Score")
+    st.progress(st.session_state.concept_score / 100)
+    st.write(f"{st.session_state.concept_score}/100")
+
+    if st.button("Generate Report"):
+        report = generate_report(
+            st.session_state.transcript,
+            st.session_state.feedback,
+            st.session_state.concept_score
         )
-        st.success("PDF Report Generated!")
+
+        st.download_button(
+            "Download Report",
+            report,
+            file_name="concept_report.txt"
+        )

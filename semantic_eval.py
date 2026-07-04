@@ -1,18 +1,18 @@
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
+def evaluate_concept(transcript):
 
-# Load Sentence-BERT model
-model = SentenceTransformer('all-MiniLM-L6-v2')
+    if transcript == "Speech could not be recognized.":
+        return "Unable to evaluate concept."
 
-def calculate_similarity(reference_text, student_text):
-    """
-    Calculate semantic similarity.
-    """
-    embeddings = model.encode([reference_text, student_text])
+    words = len(transcript.split())
 
-    similarity = cosine_similarity(
-        [embeddings[0]],
-        [embeddings[1]]
-    )[0][0]
+    if words > 100:
+        return "Excellent concept understanding."
 
-    return round(float(similarity), 4)
+    elif words > 50:
+        return "Good concept understanding."
+
+    elif words > 20:
+        return "Average understanding."
+
+    else:
+        return "Needs Improvement."

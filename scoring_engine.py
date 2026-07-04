@@ -1,19 +1,11 @@
-def calculate_score(similarity):
-    """
-    Convert similarity to percentage score.
-    """
-    return round(similarity * 100, 2)
+def calculate_score(feedback):
 
+    scores = {
+        "Excellent concept understanding.": 95,
+        "Good concept understanding.": 80,
+        "Average understanding.": 60,
+        "Needs Improvement.": 40,
+        "Unable to evaluate concept.": 0
+    }
 
-def classify_understanding(score):
-    """
-    Classify understanding level.
-    """
-    if score >= 90:
-        return "Excellent"
-    elif score >= 75:
-        return "Good"
-    elif score >= 50:
-        return "Average"
-    else:
-        return "Needs Improvement"
+    return scores.get(feedback, 0)
