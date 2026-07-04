@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Voice-Based Concept Understanding Analyzer
 
 ## Project Overview
@@ -39,6 +39,5 @@ python app.py
 
 ## Author 
 HIMAJA
-=======
-Voice-Based-Concept-Understanding-Analyser
->>>>>>> d02250601b8a6f080fd2e1acadbdc55b6cd72c90
+
+
